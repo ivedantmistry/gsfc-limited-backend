@@ -25,7 +25,7 @@ from django.db import transaction
 from django.contrib.auth import get_user_model
 from audit_trail.utils import log_custom_event
 from ..serializers.AssignAnalystSerializer import AssignAnalystSerializer
-from weasyprint import HTML
+# from weasyprint import HTML
 from django.conf import settings
 
 
@@ -98,6 +98,7 @@ class TestRecordViewSet(viewsets.ModelViewSet):
         Generates and returns a PDF report for a specific test record.
         """
         try:
+            from weasyprint import HTML
             instance = self.get_object()
             serializer = self.get_serializer(instance, context={"request": request})
             record_data = serializer.data
