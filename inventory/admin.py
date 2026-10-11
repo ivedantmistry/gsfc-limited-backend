@@ -10,11 +10,6 @@ from .models import (
     TestResult,
 )
 
-# =============================================================================
-# INLINE DEFINITIONS
-# Inlines allow editing related models on the same page as the parent model.
-# =============================================================================
-
 class ParameterDefinitionInline(GenericTabularInline):
     """
     A generic inline for ParameterDefinitions.
@@ -22,7 +17,7 @@ class ParameterDefinitionInline(GenericTabularInline):
     like Version or ProductGrade.
     """
     model = ParameterDefinition
-    extra = 1  # Show one empty form for adding a new parameter
+    extra = 1
     fields = (
         "name",
         "data_type",
@@ -49,7 +44,7 @@ class VersionInline(admin.TabularInline):
     Allows managing Versions directly from the Product admin page.
     """
     model = Version
-    extra = 0  # Don't show empty forms by default, versions are significant
+    extra = 0
     fields = ("version_name", "status", "is_active")
     readonly_fields = ("status", "is_active")
     show_change_link = True
@@ -60,14 +55,13 @@ class TestResultInline(admin.TabularInline):
     Allows managing TestResults (the actual values) from the TestRecord page.
     """
     model = TestResult
-    extra = 0  # Parameters are pre-defined, so don't show empty forms
+    extra = 0
     fields = (
         "parameter",
         "value_string",
         "value_decimal",
         "value_boolean",
     )
-    # Autocomplete for selecting from a potentially long list of parameters
     autocomplete_fields = ("parameter",)
     
     def get_queryset(self, request):
@@ -76,11 +70,6 @@ class TestResultInline(admin.TabularInline):
         """
         return super().get_queryset(request).select_related('parameter')
 
-
-# =============================================================================
-# MODEL ADMIN DEFINITIONS
-# These classes define the admin interface for each model.
-# =============================================================================
 
 @admin.register(Lab)
 class LabAdmin(admin.ModelAdmin):

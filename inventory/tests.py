@@ -7,7 +7,6 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 from rest_framework import status
 
-# Import all your models
 from .models import (
     Product,
     Version,
@@ -28,11 +27,9 @@ class InventoryAPITests(APITestCase):
         Set up a consistent database state for all API tests.
         This runs once per test class.
         """
-        # 1. Create Groups
         cls.analyst_group = Group.objects.create(name="Analyst")
         cls.manager_group = Group.objects.create(name="Manager")
 
-        # 2. Create Users
         cls.analyst_user = User.objects.create_user(
             username="analyst", password="password123"
         )
@@ -115,10 +112,9 @@ class InventoryAPITests(APITestCase):
             boolean_false_label="No",
         )
         cls.v_active_grades.status = "LOCKED"
-        cls.v_active_grades.is_active = True  # This also saves
+        cls.v_active_grades.is_active = True
         cls.v_active_grades.save()
 
-        # 6. Test Records
         cls.tr_pending = TestRecord.objects.create(
             version=cls.v_active_grades,
             lab=cls.lab,
