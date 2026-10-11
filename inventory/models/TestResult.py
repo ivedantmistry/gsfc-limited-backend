@@ -12,7 +12,6 @@ class TestResult(AuditableMixin, models.Model):
     parameter = models.ForeignKey(
         ParameterDefinition, on_delete=models.CASCADE, related_name="test_values"
     )
-    # Store values based on data_type
     value_decimal = models.DecimalField(
         max_digits=10, decimal_places=4, blank=True, null=True
     )
@@ -40,9 +39,6 @@ class TestResult(AuditableMixin, models.Model):
         """
         super().clean()
 
-        # ---  IMMUTABILITY LOGIC ---
-        # If the record already exists and its parent TestRecord is in a locked state,
-        # prevent any changes to the result.
         LOCKED_STATUSES = ["APPROVED", "REJECTED", "RETEST_ORDERED", "CLOSED"]
         if self.pk and self.test_record.status in LOCKED_STATUSES:
             raise ValidationError(
@@ -51,7 +47,6 @@ class TestResult(AuditableMixin, models.Model):
                 )
                 % {"status": self.test_record.get_status_display()}
             )
-        # ---  IMMUTABILITY LOGIC ---
 
         param_def = self.parameter
         has_decimal = self.value_decimal is not None

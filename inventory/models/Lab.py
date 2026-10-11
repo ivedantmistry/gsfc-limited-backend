@@ -12,17 +12,16 @@ class Lab(AuditableMixin, models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, null=True)
 
-    # Access Control: Link Labs to Groups and specific Users for permissions
     accessible_by_groups = models.ManyToManyField(
         Group,
         blank=True,
-        related_name="group_accessible_labs", # 👈 Changed
+        related_name="group_accessible_labs",
         help_text="Groups that have access to perform and view tests in this lab.",
     )
     accessible_by_users = models.ManyToManyField(
         User,
         blank=True,
-        related_name="user_accessible_labs", # 👈 Changed
+        related_name="user_accessible_labs",
         help_text="Specific users who have exceptional access to this lab.",
     )
 

@@ -12,7 +12,7 @@ class AssignAnalystSerializer(serializers.Serializer):
     analyst_id = serializers.IntegerField()
 
     def validate_analyst_id(self, value):
-        # Check if the user exists
+
         try:
             user = User.objects.get(pk=value)
         except User.DoesNotExist:

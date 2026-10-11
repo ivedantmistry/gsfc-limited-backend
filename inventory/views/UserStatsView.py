@@ -26,7 +26,6 @@ class UserPerformanceChartView(APIView):
                 {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # ✅ 1. SIMPLIFIED DATE LOGIC: Use frontend dates if available, otherwise default to 7 days.
         try:
             date_after_str = request.query_params.get("date_after")
             date_before_str = request.query_params.get("date_before")
@@ -47,8 +46,6 @@ class UserPerformanceChartView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # We will now always group by day and let the frontend decide the range.
-        # The zero-filling logic is perfect for this.
         duration = end_date - start_date
         all_dates = {
             (start_date + timedelta(days=i)).isoformat(): 0
@@ -96,12 +93,9 @@ class UserSummaryCountsView(APIView):
                 {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # ✅ FIX: Use 'now' (an aware datetime) for all calculations, not 'today'
         now = timezone.now()
-
         base_queryset = TestRecord.objects.filter(analyst=user)
 
-        # Calculate counts using aware datetimes to prevent warnings
         stats = {
             "count_today": base_queryset.filter(created_at__date=now.date()).count(),
             "count_week": base_queryset.filter(

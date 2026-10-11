@@ -11,4 +11,4 @@ class LabViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Lab.objects.all().order_by('name')
     serializer_class = LabSerializer
     permission_classes = [permissions.IsAuthenticated]
-    pagination_class = None # Return all labs, not paginated
+    pagination_class = None

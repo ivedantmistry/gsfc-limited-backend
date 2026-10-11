@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Avg, Min, Max  # ✅ 1. Import aggregation functions
+from django.db.models import Avg, Min, Max 
 from django.db.models.functions import TruncDate
 from ..models import Product, TestResult, TestRecord, ParameterDefinition
 

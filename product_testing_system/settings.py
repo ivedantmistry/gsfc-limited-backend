@@ -66,11 +66,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "product_testing_system.wsgi.application"
 
-
-# -----------------------------------
-# PostgreSQL / Neon Database
-# -----------------------------------
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -80,8 +75,10 @@ DATABASES = {
         "HOST": env("POSTGRES_HOST"),
         "PORT": env("POSTGRES_PORT", default="5432"),
         "OPTIONS": {
-            "sslmode": "require",
-            "channel_binding": "require",
+            "sslmode": env("DB_SSLMODE", default="disable" if DEBUG else "require"),
+            "channel_binding": env(
+                "DB_CHANNEL_BINDING", default="disable" if DEBUG else "require"
+            ),
         },
     }
 }
@@ -120,9 +117,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
@@ -155,9 +150,7 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
     "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
-    "AUTH_TOKEN_CLASSES": (
-        "rest_framework_simplejwt.tokens.AccessToken",
-    ),
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "TOKEN_TYPE_CLAIM": "token_type",
     "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
     "JTI_CLAIM": "jti",
@@ -168,16 +161,11 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS")
-CORS_EXPOSE_HEADERS = env.list(
-    "CORS_EXPOSE_HEADERS",
-    default=["Content-Disposition"]
-)
+CORS_EXPOSE_HEADERS = env.list("CORS_EXPOSE_HEADERS", default=["Content-Disposition"])
 
 
 STATIC_URL = "static/"
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-STATICFILES_STORAGE = (
-    "whitenoise.storage.CompressedManifestStaticFilesStorage"
-)
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"

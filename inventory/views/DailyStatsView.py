@@ -28,15 +28,10 @@ class DailyStatsView(APIView):
     def get(self, request, *args, **kwargs):
         user = request.user
         today = timezone.now().date()
-
-        # Start with the base queryset for today's records
         queryset = TestRecord.objects.filter(created_at__date=today)
-
-        # Apply permission-based filtering
         if not user.has_perm("inventory.can_view_all_test_records"):
             queryset = queryset.filter(analyst=user)
 
-        # Calculate stats efficiently in the database
         stats_data = {
             "total_tests": queryset.count(),
             "pending_tests": queryset.filter(status="PENDING").count(),
@@ -45,5 +40,5 @@ class DailyStatsView(APIView):
         }
 
         serializer = DailyStatsSerializer(data=stats_data)
-        serializer.is_valid(raise_exception=True)  # Ensure data matches serializer
+        serializer.is_valid(raise_exception=True)  
         return Response(serializer.data)

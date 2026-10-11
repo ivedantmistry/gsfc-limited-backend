@@ -26,7 +26,6 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        # Update the fields list to use our new 'all_permissions' field
         fields = (
             "id",
             "username",

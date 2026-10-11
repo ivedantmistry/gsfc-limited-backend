@@ -7,7 +7,6 @@ from django.contrib.contenttypes.models import ContentType
 
 
 class ParameterDefinition(AuditableMixin, models.Model):
-    # This defines the "owner" of the parameter (either a Version or a ProductGrade)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     owner = GenericForeignKey("content_type", "object_id")
@@ -51,7 +50,7 @@ class ParameterDefinition(AuditableMixin, models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        # A parameter is unique to its owner, name, and unit
+
         unique_together = ("content_type", "object_id", "name", "unit")
         verbose_name = "Parameter Definition"
         verbose_name_plural = "Parameter Definitions"
@@ -60,7 +59,7 @@ class ParameterDefinition(AuditableMixin, models.Model):
         return f"{self.name}" + (f" ({self.unit})" if self.unit else "")
 
     def clean(self):
-        # Validation to check if the owner belongs to a LOCKED version
+
         is_locked = False
         owner_obj = self.owner
         if hasattr(owner_obj, "status") and owner_obj.status == "LOCKED":
@@ -75,7 +74,6 @@ class ParameterDefinition(AuditableMixin, models.Model):
                 )
             )
 
-        # (The rest of your original, excellent validation logic for ENUM/BOOLEAN remains)
         if self.data_type == "ENUM":
             if not self.enum_options:
                 raise ValidationError(

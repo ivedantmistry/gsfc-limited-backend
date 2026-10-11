@@ -25,9 +25,7 @@ from django.db import transaction
 from django.contrib.auth import get_user_model
 from audit_trail.utils import log_custom_event
 from ..serializers.AssignAnalystSerializer import AssignAnalystSerializer
-# from weasyprint import HTML
 from django.conf import settings
-
 
 User = get_user_model()
 
@@ -99,22 +97,29 @@ class TestRecordViewSet(viewsets.ModelViewSet):
         """
         try:
             from weasyprint import HTML
+
             instance = self.get_object()
             serializer = self.get_serializer(instance, context={"request": request})
             record_data = serializer.data
             logo_base64 = None
-            logo_path = os.path.join(settings.BASE_DIR, "product_testing_system", "static", "images", "logo.png")
+            logo_path = os.path.join(
+                settings.BASE_DIR,
+                "product_testing_system",
+                "static",
+                "images",
+                "logo.png",
+            )
 
             try:
                 with open(logo_path, "rb") as image_file:
                     logo_base64 = base64.b64encode(image_file.read()).decode("utf-8")
             except FileNotFoundError:
                 print(f"Logo file not found at {logo_path}")
-                pass 
+                pass
 
             context = {
                 "record": instance,
-                "data": record_data,  # 👈 Pass the serialized data for the table/signatures
+                "data": record_data,
                 "logo_base64": logo_base64,
             }
 
@@ -130,7 +135,6 @@ class TestRecordViewSet(viewsets.ModelViewSet):
             return response
 
         except Exception as e:
-            # Add this for better debugging in your console
             import traceback
 
             traceback.print_exc()
@@ -140,9 +144,6 @@ class TestRecordViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    # 👇 =================================================================
-    # 👇   ADD THIS NEW FUNCTION
-    # 👇 =================================================================
     @action(
         detail=True,
         methods=["get"],
@@ -153,10 +154,10 @@ class TestRecordViewSet(viewsets.ModelViewSet):
         """
         Generates and returns an Excel (.xlsx) report for a specific test record.
         """
-        
+
         def get_expected_range(param_data):
             data_type = param_data.get("data_type")
-            
+
             if data_type in ["INTEGER", "DECIMAL"]:
                 min_val = param_data.get("min_value")
                 max_val = param_data.get("max_value")
@@ -166,44 +167,39 @@ class TestRecordViewSet(viewsets.ModelViewSet):
                     return f">= {min_val}"
                 if max_val is not None:
                     return f"<= {max_val}"
-                return "NA" # Changed from N/A
-                
+                return "NA"
+
             elif data_type == "ENUM":
                 options = param_data.get("enum_options")
                 if options and isinstance(options, list):
                     return ", ".join(options)
-                return "NA" # Changed from N/A
-                
+                return "NA"
+
             elif data_type == "BOOLEAN":
                 true_label = param_data.get("boolean_true_label", "True")
                 false_label = param_data.get("boolean_false_label", "False")
                 return f"{true_label} / {false_label}"
-                
+
             elif data_type == "STRING":
                 return "Text"
-                
-            return "NA" # Changed from N/A
+
+            return "NA"
 
         try:
-            # 1. Get object and serializer data
-            instance = self.get_object() # 👈 We need the raw instance
+            instance = self.get_object()
             serializer = TestRecordSerializer(instance, context={"request": request})
             record_data = serializer.data
 
-            # 2. Create an in-memory workbook
             wb = Workbook()
             ws = wb.active
             ws.title = "Test Report"
-            
+
             bold_font = Font(bold=True)
 
-            # 3. Add Main Record Details
             ws.append(["Test Record Details"])
             ws["A1"].font = bold_font
             ws.merge_cells("A1:B1")
 
-            # --- UPDATED SECTION ---
-            # We now use .get(key) or "NA" to handle blank/null values
             main_details = [
                 ("Record ID", record_data.get("record_id") or "NA"),
                 ("Product ID", instance.version.product.product_id or "NA"),
@@ -220,18 +216,15 @@ class TestRecordViewSet(viewsets.ModelViewSet):
                 ("Approved By", record_data.get("approved_by_full_name") or "NA"),
                 ("Approved At", record_data.get("approved_at") or "NA"),
             ]
-            # --- END UPDATED SECTION ---
-            
+
             for row, (key, value) in enumerate(main_details, start=2):
                 ws[f"A{row}"] = key
                 ws[f"A{row}"].font = bold_font
                 ws[f"B{row}"] = value
 
-            # Add a spacer row
             spacer_row = len(main_details) + 3
-            ws.append([]) # Add an empty row
+            ws.append([])
 
-            # 4. Add Parameter Results
             results_header_row = spacer_row
             ws[f"A{results_header_row}"] = "Test Results"
             ws[f"A{results_header_row}"].font = bold_font
@@ -239,7 +232,7 @@ class TestRecordViewSet(viewsets.ModelViewSet):
 
             param_headers = ["Parameter", "Expected Range", "Result", "Status"]
             ws.append(param_headers)
-            for cell in ws[ws.max_row]: 
+            for cell in ws[ws.max_row]:
                 cell.font = bold_font
 
             param_values = record_data.get("parameter_values", [])
@@ -247,28 +240,27 @@ class TestRecordViewSet(viewsets.ModelViewSet):
                 for param in param_values:
                     param_data = param.get("parameter", {})
                     expected_range = get_expected_range(param_data)
-                    
-                    ws.append([
-                        param_data.get("name") or "NA",
-                        expected_range,
-                        param.get("display_value") or "NA",
-                        param.get("status") or "NA",
-                    ])
+
+                    ws.append(
+                        [
+                            param_data.get("name") or "NA",
+                            expected_range,
+                            param.get("display_value") or "NA",
+                            param.get("status") or "NA",
+                        ]
+                    )
             else:
                 ws.append(["No test results recorded."])
 
-            # 5. Set column widths
             ws.column_dimensions["A"].width = 25
             ws.column_dimensions["B"].width = 30
             ws.column_dimensions["C"].width = 20
             ws.column_dimensions["D"].width = 15
 
-            # 6. Save workbook to an in-memory stream
             with io.BytesIO() as b:
                 wb.save(b)
                 b.seek(0)
 
-                # 7. Create the HTTP response
                 response = HttpResponse(
                     b.read(),
                     content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -284,9 +276,6 @@ class TestRecordViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    # 👇 =================================================================
-    # 👇   END OF NEW FUNCTION
-    # 👇 =================================================================
     @action(
         detail=True, methods=["patch"], permission_classes=[permissions.IsAuthenticated]
     )
@@ -431,7 +420,7 @@ class TestRecordViewSet(viewsets.ModelViewSet):
             test_record.supervisor_comments = comments
             test_record.approved_by = user
             test_record.approved_at = timezone.now()
-            test_record.decision = new_status  # Set the permanent decision
+            test_record.decision = new_status
             test_record.save(
                 update_fields=[
                     "status",

@@ -30,7 +30,6 @@ class ProductGrade(AuditableMixin, models.Model):
         ]
 
     def clean(self):
-        # NEW: Validation to ensure grades can only be added to a DRAFT specification.
         if self.version and self.version.status == "LOCKED":
             raise ValidationError(
                 _(

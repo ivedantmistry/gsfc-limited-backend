@@ -9,7 +9,6 @@ venv/
 env/
 
 # Django project settings
-.env.example
 *.local
 .env
 # Database files
